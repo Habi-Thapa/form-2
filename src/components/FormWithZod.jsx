@@ -1,16 +1,32 @@
 import { DevTool } from "@hookform/devtools";
 import { useForm } from "react-hook-form";
-
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 let render = 0;
+
+const signUpSchema = z
+  .object({
+    email: z.string().email(),
+    password: z
+      .string()
+      .min(10, "password must be at least 10 characters long"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "password must match",
+    path: ["confirmPassword"],
+  });
+
 const FormWithZod = () => {
   const {
     control,
     register,
     handleSubmit,
     reset,
-    getValues,
     formState: { errors, isSubmitting },
-  } = useForm();
+  } = useForm({
+    resolver: zodResolver(signUpSchema),
+  });
 
   const onSubmit = async (data) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -30,12 +46,7 @@ const FormWithZod = () => {
           id="email"
           placeholder="email"
           className="border px-4 py-2 rounded"
-          {...register("email", {
-            required: {
-              value: true,
-              message: "Enter email",
-            },
-          })}
+          {...register("email")}
         />
         {errors.email && (
           <p className="text-red-500">{`${errors.email.message}`}</p>
@@ -45,16 +56,7 @@ const FormWithZod = () => {
           id="password"
           placeholder="Password"
           className=" border px-4 py-2 rounded"
-          {...register("password", {
-            required: {
-              value: true,
-              message: "Enter password",
-            },
-            minLength: {
-              value: 10,
-              message: "Password must be atleast 10 character long",
-            },
-          })}
+          {...register("password")}
         />
         {errors.password && (
           <p className="text-red-500">{`${errors.password.message}`}</p>
@@ -64,14 +66,7 @@ const FormWithZod = () => {
           id="confirmPassword"
           placeholder="Confirm Password"
           className="border px-4 py-2 rounded"
-          {...register("confirmPassword", {
-            required: {
-              value: true,
-              message: "Enter passowrd as above",
-            },
-            validate: (value) =>
-              value === getValues("password") || "Password must match",
-          })}
+          {...register("confirmPassword")}
         />
         {errors.confirmPassword && (
           <p className="text-red-500">{`${errors.confirmPassword.message}`}</p>
